@@ -98,3 +98,12 @@ export const handleSignIn = async (req: Request, res: Response) => {
   }
 }
 
+export const handleLogout = async (res: Response) => {
+  try {
+    return res.status(200).json({ message: "Logout successful" });
+  }
+    catch (error) {
+    return res.status(500).json({message: "Logout Failed"})
+  }
+}
+

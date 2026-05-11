@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { env } from './env.js'
 import { authRouter } from './routes/auth.route.js';
+import { middleware } from './middleware/middleware.js';
 
 const app = express(); 
 
