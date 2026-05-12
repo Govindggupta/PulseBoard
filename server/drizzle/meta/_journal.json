@@ -15,6 +15,13 @@
       "when": 1778498661473,
       "tag": "0001_material_frog_thor",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778582943032,
+      "tag": "0002_woozy_lethal_legion",
+      "breakpoints": true
     }
   ]
 }

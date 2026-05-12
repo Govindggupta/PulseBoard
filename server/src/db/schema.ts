@@ -11,6 +11,18 @@ import {
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import crypto from "crypto";
+
+// Generates IDs like: x7k9mq2p (8 chars, a-z + 0-9)
+export function generatePollId(): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  const bytes = crypto.randomBytes(8);
+  for (let i = 0; i < 8; i++) {
+    result += chars[bytes[i]! % chars.length];
+  }
+  return result;
+}
 
 export const users = pgTable(
   "users",
@@ -32,7 +44,7 @@ export const responseModeEnum = pgEnum("response_mode", [
 export const polls = pgTable(
   "polls",
   {
-    id: uuid("id").defaultRandom().primaryKey(),
+    id: varchar("id", { length: 8 }).primaryKey().$defaultFn(() => generatePollId()),
     title: varchar("title", { length: 255 }).notNull(),
     description: text("description"),
     creatorId: uuid("creator_id")
@@ -57,7 +69,7 @@ export const questions = pgTable(
   "questions",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    pollId: uuid("poll_id")
+    pollId: varchar("poll_id", { length: 8 })
       .references(() => polls.id, {
         onDelete: "cascade",
       })
@@ -86,7 +98,7 @@ export const responses = pgTable(
   "responses",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    pollId: uuid("poll_id")
+    pollId: varchar("poll_id", { length: 8 })
       .references(() => polls.id, { onDelete: "cascade" })
       .notNull(),
     userId: uuid("user_id").references(() => users.id, {
