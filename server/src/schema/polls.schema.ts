@@ -22,14 +22,34 @@ export const createPollSchema = z.object({
           .min(2, "Each question must have at least 2 options"),
       })
     )
-    .optional(), // Can be empty to create poll first, add questions later
 });
 
-// Update poll (title, description, expiresAt only - questions managed separately)
 export const updatePollSchema = z.object({
   title: z.string().min(1).max(255).optional(),
   description: z.string().optional(),
-  expiresAt: z.string().datetime().optional(),
+  responseMode: z.enum(["ANONYMOUS", "AUTHENTICATED"]).optional(),
+  expiresAt: z.string().datetime("Invalid date format").optional(),
+  questions: z
+    .array(
+      z.object({
+        id: z.string().uuid().optional(),        // if present → update/delete existing
+        delete: z.boolean().optional(),           // if true + id → delete this question
+        question: z.string().min(1).optional(),   // required only for new questions
+        required: z.boolean().optional(),
+        order: z.number().int().positive().optional(),
+        options: z
+          .array(
+            z.object({
+              id: z.string().uuid().optional(),   // if present → update/delete existing
+              delete: z.boolean().optional(),      // if true + id → delete this option
+              text: z.string().min(1).optional(),  // required only for new options
+              order: z.number().int().positive().optional(),
+            })
+          )
+          .optional(),
+      })
+    )
+    .optional(),
 });
 
 // Add question to existing poll

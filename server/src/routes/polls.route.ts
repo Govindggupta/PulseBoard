@@ -6,6 +6,7 @@ import {
 	handleGetPollById,
 	handleGetUserPolls,
 	handleDeletePollById,
+	handleUpdatePollById,
 } from '../controllers/polls.controller.js';
 
 export const pollsRouter: Router = express.Router();
@@ -14,7 +15,7 @@ pollsRouter.post('/', middleware, handleCreatePoll);
 pollsRouter.get('/:pollId', middleware, handleGetPollById)
 pollsRouter.get('/', middleware , handleGetUserPolls);
 pollsRouter.delete('/:pollId', middleware, handleDeletePollById);
-// pollsRouter.put('/:pollId' , middleware)
+pollsRouter.put('/:pollId' , middleware , handleUpdatePollById)
 
 
 
