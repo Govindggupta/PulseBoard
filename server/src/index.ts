@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { env } from './env.js'
 import { authRouter } from './routes/auth.route.js';
+import { pollsRouter } from './routes/polls.route.js';
 import { middleware } from './middleware/middleware.js';
 
 const app = express(); 
@@ -14,6 +15,7 @@ app.get("/check", (req, res) => {
 });
 
 app.use('/api/auth', authRouter);
+app.use('/api/polls', pollsRouter)
 
 app.listen(env.PORT , () => {
     console.log(`server is running at ${env.PORT}`)

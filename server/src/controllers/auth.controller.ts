@@ -44,7 +44,7 @@ export const handleSignUp = async (req: Request, res: Response) => {
 
     const token = jwt.sign({ id: newUser!.id }, env.JWT_SECRET, { expiresIn: '7d' });
 
-    return res.status(201).json({ message: "User created successfully", token });
+    return res.status(201).json({ message: "User created successfully", user : newUser,  token });
   } catch (error) {
     return res.status(500).json({message: "Internal server error" , error: error instanceof Error ? error.message : "Unknown error"})
   }
