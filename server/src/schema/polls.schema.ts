@@ -77,6 +77,7 @@ export const submitResponseSchema = z.object({
       })
     )
     .min(1, "Must answer at least one question"),
+  anonymousIdentifier: z.string().min(1).max(255).optional(),
 });
 
 // Publish poll
