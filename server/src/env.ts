@@ -4,6 +4,8 @@ import { z } from 'zod';
 export const envSchema = z.object({
     PORT: z.string(),
     JWT_SECRET: z.string(),
+    DATABASE_URL: z.string(),
+    REDIS_URL: z.string(),
 });
 
 const createEnv = (env: NodeJS.ProcessEnv) => {
