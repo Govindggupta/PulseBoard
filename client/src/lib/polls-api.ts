@@ -119,4 +119,29 @@ export const pollsApi = {
   deletePoll: async (pollId: string) => {
     await api.delete(`/api/polls/${pollId}`)
   },
+
+  getPublicPoll: async (pollId: string) => {
+    const response = await api.get<{ poll: PublicPoll }>(`/api/polls/${pollId}/public`)
+    return response.data.poll
+  },
+
+  submitResponse: async (pollId: string, payload: SubmitResponseRequest) => {
+    const response = await api.post<{ message: string }>(`/api/polls/${pollId}/responses`, payload)
+    return response.data
+  },
+}
+
+export type PublicPoll = {
+  id: string
+  title: string
+  description: string | null
+  responseMode: PollResponseMode
+  expiresAt: string
+  isExpired: boolean
+  questions: PollQuestion[]
+}
+
+export type SubmitResponseRequest = {
+  answers: Array<{ questionId: string; optionId: string }>
+  anonymousIdentifier?: string
 }
