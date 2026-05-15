@@ -121,9 +121,9 @@ function Hero() {
   return (
     <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
       {/* Background - Subtle gray */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-zinc-700/5 rounded-full blur-[120px] opacity-60 mix-blend-screen pointer-events-none"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-zinc-600/5 rounded-full blur-[100px] opacity-50 mix-blend-screen pointer-events-none translate-x-[20%] translate-y-[20%]"></div>
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-zinc-700/5 rounded-full blur-[120px] opacity-60 mix-blend-screen pointer-events-none"></div>
+      <div className="absolute top-1/2 left-1/2 translate-x-[20%] translate-y-[20%] w-150 h-150 bg-sky-500/5 rounded-full blur-[100px] opacity-50 mix-blend-screen pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-size-[40px_40px] pointer-events-none mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
@@ -209,7 +209,7 @@ function Hero() {
           transition={{ duration: 0.7, delay: 0.4 }}
           className="mt-20 relative mx-auto max-w-5xl group"
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10 top-1/2"></div>
+          <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent z-10 top-1/2"></div>
           <div className="absolute -inset-1 bg-white/5 rounded-lg blur-xl opacity-0 group-hover:opacity-100 transition duration-700"></div>
 
           <div className="relative rounded-lg border border-white/10 bg-card/90 backdrop-blur shadow-2xl shadow-black/35 overflow-hidden">
@@ -241,30 +241,30 @@ function Hero() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div className="bg-zinc-900 border border-white/5 p-4 rounded-lg hover:border-white/10 transition-colors">
-                  <div className="p-3 bg-white/5 rounded-md text-zinc-400 w-fit mb-3">
+                <motion.div whileHover={{ y: -3 }} className="bg-zinc-900 border border-white/5 p-4 rounded-lg hover:border-white/10 transition-colors">
+                  <div className="p-3 bg-white/5 rounded-md text-sky-300 w-fit mb-3">
                     <BarChart3 className="w-6 h-6" />
                   </div>
                   <p className="text-xs text-zinc-500 font-medium">Total Responses</p>
                   <p className="text-2xl font-bold text-zinc-50 mt-1">2,847</p>
-                </div>
-                <div className="bg-zinc-900 border border-white/5 p-4 rounded-lg hover:border-white/10 transition-colors">
-                  <div className="p-3 bg-white/5 rounded-md text-zinc-400 w-fit mb-3">
+                </motion.div>
+                <motion.div whileHover={{ y: -3 }} className="bg-zinc-900 border border-white/5 p-4 rounded-lg hover:border-white/10 transition-colors">
+                  <div className="p-3 bg-white/5 rounded-md text-emerald-300 w-fit mb-3">
                     <Users className="w-6 h-6" />
                   </div>
                   <p className="text-xs text-zinc-500 font-medium">Participants</p>
                   <p className="text-2xl font-bold text-zinc-50 mt-1">1,203</p>
-                </div>
-                <div className="bg-zinc-900 border border-white/5 p-4 rounded-lg hover:border-white/10 transition-colors">
-                  <div className="p-3 bg-white/5 rounded-md text-zinc-400 w-fit mb-3">
+                </motion.div>
+                <motion.div whileHover={{ y: -3 }} className="bg-zinc-900 border border-white/5 p-4 rounded-lg hover:border-white/10 transition-colors">
+                  <div className="p-3 bg-white/5 rounded-md text-amber-300 w-fit mb-3">
                     <TrendingUp className="w-6 h-6" />
                   </div>
                   <p className="text-xs text-zinc-500 font-medium">Engagement</p>
                   <p className="text-2xl font-bold text-zinc-50 mt-1">94.2%</p>
-                </div>
+                </motion.div>
               </div>
 
-              <div className="bg-white/[0.03] border border-white/10 rounded-lg p-6">
+              <div className="bg-white/3 border border-white/10 rounded-lg p-6">
                 <h4 className="text-zinc-50 font-semibold mb-4">Response Distribution</h4>
                 <div className="space-y-3">
                   <div>
@@ -341,7 +341,7 @@ function Features() {
 
   return (
     <section id="features" className="relative py-20 lg:py-32 overflow-hidden">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-zinc-700/5 rounded-full blur-[120px] opacity-40 mix-blend-screen pointer-events-none"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-150 h-150 bg-sky-500/5 rounded-full blur-[120px] opacity-40 mix-blend-screen pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
@@ -371,18 +371,18 @@ function Features() {
                 viewport={{ once: true }}
                 className="group"
               >
-                <div className="relative p-6 rounded-lg border border-white/10 bg-white/[0.03] hover:border-white/20 transition-all duration-300 h-full backdrop-blur">
-                  <div className="absolute inset-0 bg-white/[0.01] group-hover:bg-white/[0.02] rounded-lg transition duration-300"></div>
+                <motion.div whileHover={{ y: -4 }} className="relative p-6 rounded-lg border border-white/10 bg-white/3 hover:border-white/20 transition-all duration-300 h-full backdrop-blur">
+                  <div className="absolute inset-0 bg-white/1 group-hover:bg-white/2 rounded-lg transition duration-300"></div>
 
                   <div className="relative z-10">
-                    <div className="p-3 bg-white/[0.08] rounded-lg w-fit mb-4">
+                    <div className="p-3 bg-white/8 rounded-lg w-fit mb-4">
                       <Icon className="w-6 h-6 text-zinc-400" />
                     </div>
 
                     <h3 className="text-lg font-semibold text-zinc-50 mb-2">{feature.title}</h3>
                     <p className="text-zinc-400 text-sm leading-relaxed">{feature.description}</p>
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             )
           })}
@@ -405,7 +405,7 @@ function Benefits() {
 
   return (
     <section id="benefits" className="relative py-20 lg:py-32 overflow-hidden">
-      <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-zinc-700/5 rounded-full blur-[120px] opacity-40 mix-blend-screen pointer-events-none"></div>
+      <div className="absolute top-1/2 right-0 w-125 h-125 bg-zinc-700/5 rounded-full blur-[120px] opacity-40 mix-blend-screen pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -434,7 +434,7 @@ function Benefits() {
                     viewport={{ once: true }}
                     className="flex items-center gap-3"
                   >
-                    <Icon className="w-5 h-5 text-zinc-400 flex-shrink-0" />
+                    <Icon className="w-5 h-5 text-zinc-400 shrink-0" />
                     <span className="text-zinc-200 text-lg">{benefit.text}</span>
                   </motion.div>
                 )
@@ -464,24 +464,24 @@ function Benefits() {
             viewport={{ once: true }}
             className="relative"
           >
-            <div className="bg-white/[0.03] rounded-xl p-8 border border-white/10">
+            <div className="bg-white/3 rounded-xl p-8 border border-white/10">
               <div className="space-y-6">
                 <div className="flex gap-4">
-                  <Shield className="w-8 h-8 text-zinc-400 flex-shrink-0" />
+                  <Shield className="w-8 h-8 text-zinc-400 shrink-0" />
                   <div>
                     <h4 className="text-zinc-50 font-semibold mb-2">Enterprise Grade Security</h4>
                     <p className="text-zinc-400 text-sm">Your data is protected with industry-standard encryption and security practices.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
-                  <Clock className="w-8 h-8 text-zinc-400 flex-shrink-0" />
+                  <Clock className="w-8 h-8 text-zinc-400 shrink-0" />
                   <div>
                     <h4 className="text-zinc-50 font-semibold mb-2">Lightning Fast</h4>
                     <p className="text-zinc-400 text-sm">Optimized performance ensures results load instantly, no matter the scale.</p>
                   </div>
                 </div>
                 <div className="flex gap-4">
-                  <Users className="w-8 h-8 text-zinc-400 flex-shrink-0" />
+                  <Users className="w-8 h-8 text-zinc-400 shrink-0" />
                   <div>
                     <h4 className="text-zinc-50 font-semibold mb-2">Built for Scale</h4>
                     <p className="text-zinc-400 text-sm">Handle thousands of simultaneous participants without any performance issues.</p>
@@ -523,7 +523,7 @@ function HowItWorks() {
 
   return (
     <section id="how" className="relative py-20 lg:py-32 overflow-hidden">
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-zinc-700/5 rounded-full blur-[120px] opacity-40 mix-blend-screen pointer-events-none"></div>
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-150 h-150 bg-emerald-500/5 rounded-full blur-[120px] opacity-40 mix-blend-screen pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
@@ -551,7 +551,7 @@ function HowItWorks() {
               viewport={{ once: true }}
               className="relative"
             >
-              <div className="p-6 rounded-lg border border-white/10 bg-white/[0.03] backdrop-blur">
+              <div className="p-6 rounded-lg border border-white/10 bg-white/3 backdrop-blur">
                 <div className="text-4xl font-bold text-zinc-400 mb-4">
                   {step.number}
                 </div>
@@ -576,8 +576,8 @@ function HowItWorks() {
 function CTA() {
   return (
     <section className="relative py-20 lg:py-32 overflow-hidden">
-      <div className="absolute inset-0 bg-white/[0.01]"></div>
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-zinc-700/5 rounded-full blur-[120px] opacity-40 mix-blend-screen pointer-events-none"></div>
+      <div className="absolute inset-0 bg-white/1"></div>
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-150 h-150 bg-sky-500/5 rounded-full blur-[120px] opacity-40 mix-blend-screen pointer-events-none"></div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
         <motion.div
@@ -699,7 +699,25 @@ function Footer() {
 // Main HomePage Component
 export function HomePage() {
   return (
-    <div className="min-h-screen bg-black text-zinc-50">
+    <div className="relative min-h-screen overflow-hidden bg-black text-zinc-50">
+      <motion.div
+        aria-hidden="true"
+        initial={{ opacity: 0, scaleY: 0.55, y: -48 }}
+        animate={{ opacity: 1, scaleY: 1, y: 0 }}
+        transition={{ duration: 1.4, ease: 'easeOut' }}
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-136 origin-top"
+        style={{
+          background:
+            'radial-gradient(ellipse at top, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.16) 14%, rgba(255,255,255,0.08) 28%, rgba(255,255,255,0.03) 46%, transparent 74%)',
+        }}
+      />
+      <motion.div
+        aria-hidden="true"
+        initial={{ opacity: 0, y: -60 }}
+        animate={{ opacity: [0, 0.9, 0.7, 0.85], y: 0 }}
+        transition={{ duration: 1.8, ease: 'easeOut', delay: 0.15 }}
+        className="pointer-events-none absolute inset-x-[28%] top-0 z-0 h-192 rounded-full bg-[linear-gradient(180deg,rgba(255,255,255,0.22)_0%,rgba(255,255,255,0.12)_22%,rgba(255,255,255,0.05)_48%,transparent_78%)] blur-3xl"
+      />
       <Navbar />
       <Hero />
       <Features />
