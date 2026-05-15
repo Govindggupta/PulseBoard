@@ -30,12 +30,6 @@ function RedirectIfAuth({ children }: GuardProps) {
   return children
 }
 
-function HomeRedirect() {
-  const { isAuthenticated } = useAuth()
-
-  return <Navigate to={isAuthenticated ? '/dashboard' : '/signin'} replace />
-}
-
 function App() {
   return (
     <BrowserRouter>
