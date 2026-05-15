@@ -1,14 +1,70 @@
+import type { ReactElement } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { SignInPage } from './pages/SignInPage'
 import { SignUpPage } from './pages/SignUpPage'
+import { DashboardPage } from './pages/DashboardPage'
+import { useAuth } from './context/AuthContext'
+import { HomePage } from './pages/HomePage'
+
+type GuardProps = {
+  children: ReactElement
+}
+
+function RequireAuth({ children }: GuardProps) {
+  const { isAuthenticated } = useAuth()
+
+  if (!isAuthenticated) {
+    return <Navigate to="/signin" replace />
+  }
+
+  return children
+}
+
+function RedirectIfAuth({ children }: GuardProps) {
+  const { isAuthenticated } = useAuth()
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />
+  }
+
+  return children
+}
+
+function HomeRedirect() {
+  const { isAuthenticated } = useAuth()
+
+  return <Navigate to={isAuthenticated ? '/dashboard' : '/signin'} replace />
+}
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/signin" replace />} />
-        <Route path="/signin" element={<SignInPage />} />
-        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/" element={<HomePage/>} />
+        <Route
+          path="/signin"
+          element={
+            <RedirectIfAuth>
+              <SignInPage />
+            </RedirectIfAuth>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <RedirectIfAuth>
+              <SignUpPage />
+            </RedirectIfAuth>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <RequireAuth>
+              <DashboardPage />
+            </RequireAuth>
+          }
+        />
       </Routes>
     </BrowserRouter>
   )

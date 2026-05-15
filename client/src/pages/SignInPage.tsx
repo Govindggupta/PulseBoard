@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, Eye, EyeOff, Loader2, LockKeyhole, Mail } from 'lucide-react'
-import { useMutation } from '@tanstack/react-query'
-import { Link, useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
+import { Link } from 'react-router-dom'
 import { z } from 'zod'
 
 import { AuthShell } from '../components/auth/AuthShell'
@@ -12,9 +10,7 @@ import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../components/ui/form'
 import { Input } from '../components/ui/input'
-import { useAuth, type AuthUser } from '../context/AuthContext'
-import { api } from '../lib/axios'
-import { getApiErrorMessage } from '../lib/errors'
+import { useSignIn } from '../hooks'
 
 const signinSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -25,39 +21,11 @@ type SignInFormValues = z.infer<typeof signinSchema>
 
 export function SignInPage() {
   const [showPassword, setShowPassword] = useState(false)
-  const navigate = useNavigate()
-  const { login } = useAuth()
+  const mutation = useSignIn()
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signinSchema),
     defaultValues: { email: '', password: '' },
-  })
-
-  const mutation = useMutation({
-    mutationFn: async (values: SignInFormValues) => {
-      const signInResponse = await api.post('/api/auth/signin', values)
-      const token = signInResponse.data.token as string
-      const meResponse = await api.get<{ user: AuthUser }>('/api/auth/me', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      return { token, user: meResponse.data.user }
-    },
-    onSuccess: ({ token, user }) => {
-      login(token, user)
-      toast.success('Welcome back!')
-      navigate('/dashboard')
-    },
-    onError: (error) => {
-      if ((error as { response?: { status?: number } }).response?.status === 401) {
-        toast.error('Invalid email or password')
-        return
-      }
-
-      toast.error(getApiErrorMessage(error))
-    },
   })
 
   const onSubmit = (values: SignInFormValues) => {

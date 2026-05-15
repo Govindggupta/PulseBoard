@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, Eye, EyeOff, Loader2, LockKeyhole, Mail, UserRound } from 'lucide-react'
-import { useMutation } from '@tanstack/react-query'
-import { Link, useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
+import { Link } from 'react-router-dom'
 import { z } from 'zod'
 
 import { AuthShell } from '../components/auth/AuthShell'
@@ -12,9 +10,7 @@ import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card'
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '../components/ui/form'
 import { Input } from '../components/ui/input'
-import { useAuth, type AuthUser } from '../context/AuthContext'
-import { api } from '../lib/axios'
-import { getApiErrorMessage } from '../lib/errors'
+import { useSignUp } from '../hooks'
 
 const signupSchema = z
   .object({
@@ -37,8 +33,7 @@ type SignUpFormValues = z.infer<typeof signupSchema>
 export function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const navigate = useNavigate()
-  const { login } = useAuth()
+  const mutation = useSignUp()
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(signupSchema),
@@ -47,35 +42,6 @@ export function SignUpPage() {
       email: '',
       password: '',
       confirmPassword: '',
-    },
-  })
-
-  const mutation = useMutation({
-    mutationFn: async (values: SignUpFormValues) => {
-      const response = await api.post('/api/auth/signup', {
-        email: values.email,
-        username: values.username,
-        password: values.password,
-      })
-
-      return response.data as {
-        message: string
-        token: string
-        user: AuthUser
-      }
-    },
-    onSuccess: (data) => {
-      login(data.token, data.user)
-      toast.success('Welcome!')
-      navigate('/dashboard')
-    },
-    onError: (error) => {
-      if ((error as { response?: { status?: number } }).response?.status === 409) {
-        toast.error('Email already in use')
-        return
-      }
-
-      toast.error(getApiErrorMessage(error))
     },
   })
 
