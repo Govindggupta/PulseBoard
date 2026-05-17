@@ -23,5 +23,5 @@ pollsRouter.delete('/:pollId', middleware, handleDeletePollById);
 pollsRouter.patch('/:pollId/publish', middleware, handlePublishPoll);
 pollsRouter.get('/:pollId/analytics', middleware, handleGetPollAnalytics);
 
-pollsRouter.get('/:pollId/public', handleGetPublicPoll);
+pollsRouter.get('/:pollId/public', optionalAuth, handleGetPublicPoll);
 pollsRouter.post('/:pollId/responses', optionalAuth, handleSubmitResponse);

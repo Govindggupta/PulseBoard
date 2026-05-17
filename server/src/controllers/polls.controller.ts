@@ -235,8 +235,11 @@ export const handleUpdatePollById = async (req: Request, res: Response) => {
       return res.status(403).json({ error: "Forbidden: not poll owner" });
     }
 
-    if (existingPoll.isPublished) {
-      return res.status(400).json({ error: "Cannot update a published poll" });
+    const isRunning = existingPoll.isPublished && new Date() < existingPoll.expiresAt;
+    if (isRunning) {
+      return res.status(400).json({
+        error: "Cannot update a running poll. Unpublish it first to edit.",
+      });
     }
 
     const {
@@ -416,7 +419,15 @@ export const handlePublishPoll = async (req: Request, res: Response) => {
     }
 
     if (existingPoll.isPublished) {
-      return res.status(400).json({ error: "Poll is already published" });
+      await db
+        .update(polls)
+        .set({ isPublished: false })
+        .where(eq(polls.id, pollId));
+
+      return res.status(200).json({
+        message: "Poll unpublished successfully",
+        shareableLink: `/poll/${pollId}`,
+      });
     }
 
     // Validate poll has at least 1 question with 2 options
@@ -482,6 +493,83 @@ export const handleGetPublicPoll = async (req: Request, res: Response) => {
     }
 
     const isExpired = new Date() > poll.expiresAt;
+    const anonymousIdentifier =
+      typeof req.query.anonymousIdentifier === "string"
+        ? req.query.anonymousIdentifier
+        : undefined;
+
+    let viewerHasResponded = false;
+
+    if (poll.responseMode === "AUTHENTICATED" && req.user) {
+      const existing = await db
+        .select()
+        .from(responses)
+        .where(and(eq(responses.pollId, pollId), eq(responses.userId, req.user.id)))
+        .limit(1);
+
+      viewerHasResponded = existing.length > 0;
+    }
+
+    if (
+      poll.responseMode === "ANONYMOUS" &&
+      anonymousIdentifier &&
+      !viewerHasResponded
+    ) {
+      const existing = await db
+        .select()
+        .from(responses)
+        .where(
+          and(
+            eq(responses.pollId, pollId),
+            eq(responses.anonymousIdentifier, anonymousIdentifier),
+          ),
+        )
+        .limit(1);
+
+      viewerHasResponded = existing.length > 0;
+    }
+
+    let results = null;
+
+    if (isExpired) {
+      const totalResponses = await getPollResponseCount(pollId);
+
+      const resultQuestions = await Promise.all(
+        poll.questions.map(async (question) => {
+          const resultOptions = await Promise.all(
+            question.options.map(async (option) => {
+              const votes = await getOptionVoteCount(pollId, option.id);
+              const percentage =
+                totalResponses === 0
+                  ? 0
+                  : Number(((votes / totalResponses) * 100).toFixed(2));
+
+              return {
+                optionId: option.id,
+                text: option.text,
+                votes,
+                percentage,
+              };
+            }),
+          );
+
+          return {
+            questionId: question.id,
+            question: question.question,
+            required: question.required,
+            options: resultOptions,
+          };
+        }),
+      );
+
+      results = {
+        pollId: poll.id,
+        title: poll.title,
+        expiresAt: poll.expiresAt,
+        totalResponses,
+        questions: resultQuestions,
+      };
+    }
 
     return res.status(200).json({
       poll: {
@@ -491,6 +579,8 @@ export const handleGetPublicPoll = async (req: Request, res: Response) => {
         responseMode: poll.responseMode,
         expiresAt: poll.expiresAt,
         isExpired,
+        viewerHasResponded,
+        results,
         questions: poll.questions.map((q) => ({
           id: q.id,
           question: q.question,

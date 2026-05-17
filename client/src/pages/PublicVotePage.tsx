@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { CheckCircle2, Loader2, Vote, AlertTriangle, Clock } from 'lucide-react'
+import { CheckCircle2, Loader2, Vote, AlertTriangle, BarChart3 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { PulseBoardLogo } from '../components/brand/PulseBoardLogo'
@@ -14,14 +14,43 @@ export function PublicVotePage() {
   const { pollId } = useParams<{ pollId: string }>()
   const { isAuthenticated } = useAuth()
 
+  const anonymousIdentifier = useState(() => {
+    if (typeof window === 'undefined' || !pollId) {
+      return undefined
+    }
+
+    const storageKey = `pb_anonymous_identifier:${pollId}`
+    const storedIdentifier = localStorage.getItem(storageKey)
+
+    if (storedIdentifier) {
+      return storedIdentifier
+    }
+
+    const nextIdentifier = crypto.randomUUID()
+    localStorage.setItem(storageKey, nextIdentifier)
+    return nextIdentifier
+  })[0]
+
+  const voteStateKey = pollId ? `pb_poll_voted:${pollId}` : undefined
+
   const { data: poll, isLoading, error } = useQuery({
     queryKey: ['public-poll', pollId],
-    queryFn: () => pollsApi.getPublicPoll(pollId!),
+    queryFn: () => pollsApi.getPublicPoll(pollId!, anonymousIdentifier),
     enabled: Boolean(pollId),
   })
 
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState(false)
+
+  useEffect(() => {
+    if (!voteStateKey || typeof window === 'undefined') {
+      return
+    }
+
+    setSubmitted(Boolean(localStorage.getItem(voteStateKey)))
+  }, [voteStateKey])
+
+  const hasAlreadyVoted = Boolean(submitted || poll?.viewerHasResponded)
 
   const submitMutation = useMutation({
     mutationFn: () => {
@@ -29,11 +58,14 @@ export function PublicVotePage() {
       const answerList = Object.entries(answers).map(([questionId, optionId]) => ({ questionId, optionId }))
       return pollsApi.submitResponse(pollId, {
         answers: answerList,
-        anonymousIdentifier: poll?.responseMode === 'ANONYMOUS' ? crypto.randomUUID() : undefined,
+        anonymousIdentifier: poll?.responseMode === 'ANONYMOUS' ? anonymousIdentifier : undefined,
       })
     },
     onSuccess: () => {
       setSubmitted(true)
+      if (voteStateKey && typeof window !== 'undefined') {
+        localStorage.setItem(voteStateKey, 'true')
+      }
       toast.success('Vote submitted!')
     },
     onError: (err: unknown) => {
@@ -73,10 +105,78 @@ export function PublicVotePage() {
 
   if (poll.isExpired) {
     return (
+      <main className="min-h-screen bg-background text-foreground">
+        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+          <div className="mb-8 text-center">
+            <PulseBoardLogo className="mx-auto h-10 w-10 text-zinc-300" />
+            <p className="mt-2 text-xs uppercase tracking-[0.2em] text-zinc-500">PulseBoard</p>
+          </div>
+
+          <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
+              <BarChart3 className="h-3 w-3" /> Final Results
+            </div>
+            <h1 className="mt-4 text-2xl font-bold text-zinc-50">{poll.title}</h1>
+            {poll.description && <p className="mt-2 text-sm text-zinc-400">{poll.description}</p>}
+            <p className="mt-3 text-xs text-zinc-500">
+              Closed: {new Date(poll.expiresAt).toLocaleString()} · {poll.responseMode === 'ANONYMOUS' ? 'Anonymous' : 'Authenticated'}
+            </p>
+          </div>
+
+          <div className="grid gap-4">
+            {(poll.results?.questions ?? []).length === 0 ? (
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5 text-center text-sm text-zinc-500">
+                Results are not available yet.
+              </div>
+            ) : (
+              poll.results!.questions.map(question => (
+              <div key={question.questionId} className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-base font-medium text-zinc-100">
+                    {question.question}
+                    {question.required && <span className="ml-1 text-red-400">*</span>}
+                  </p>
+                  <span className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-300">
+                    {question.options.reduce((sum, option) => sum + option.votes, 0)} vote{question.options.reduce((sum, option) => sum + option.votes, 0) === 1 ? '' : 's'}
+                  </span>
+                </div>
+                <div className="mt-4 grid gap-2">
+                  {question.options.map(option => (
+                    <div key={option.optionId} className="grid gap-2 rounded-lg border border-white/10 bg-white/[0.02] p-3.5">
+                      <div className="flex items-center justify-between gap-3 text-sm">
+                        <span className="min-w-0 flex-1 truncate text-zinc-200">{option.text}</span>
+                        <span className="shrink-0 text-zinc-500">
+                          {option.votes} vote{option.votes === 1 ? '' : 's'} · {option.percentage.toFixed(2)}%
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-white/5">
+                        <div
+                          className="h-2 rounded-full bg-linear-to-r from-zinc-100 to-emerald-400"
+                          style={{ width: `${Math.max(option.percentage, option.votes > 0 ? 4 : 0)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              ))
+            )}
+          </div>
+
+          <p className="mt-8 text-center text-xs text-zinc-600">Voting has closed on this link.</p>
+        </div>
+      </main>
+    )
+  }
+
+  if (hasAlreadyVoted) {
+    return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background text-foreground">
-        <Clock className="h-12 w-12 text-zinc-500" />
-        <p className="text-lg font-medium text-zinc-200">Poll Expired</p>
-        <p className="text-sm text-zinc-500">This poll is no longer accepting responses.</p>
+        <div className="rounded-full bg-emerald-500/10 p-4">
+          <CheckCircle2 className="h-16 w-16 text-emerald-400" />
+        </div>
+        <p className="text-2xl font-bold text-zinc-50">Already voted</p>
+        <p className="text-sm text-zinc-400">This poll does not accept another response from you.</p>
       </div>
     )
   }

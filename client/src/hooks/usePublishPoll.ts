@@ -8,8 +8,8 @@ export function usePublishPoll(pollId: string) {
 
   return useMutation({
     mutationFn: () => pollsApi.publishPoll(pollId),
-    onSuccess: () => {
-      toast.success('Poll published successfully!', { position: 'top-center' })
+    onSuccess: (response) => {
+      toast.success(response.message, { position: 'top-center' })
       queryClient.invalidateQueries({ queryKey: ['polls', pollId] })
       queryClient.invalidateQueries({ queryKey: ['polls', 'mine'] })
     },

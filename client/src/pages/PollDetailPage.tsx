@@ -65,6 +65,7 @@ export function PollDetailPage() {
   const voteUrl = `${window.location.origin}/vote/${poll.id}`
   const analyticsUrl = `/poll/${poll.id}/analytics`
   const resultsUrl = `/poll/${poll.id}/results`
+  const isRunning = poll.isPublished && new Date() < new Date(poll.expiresAt)
   const copyLink = async () => {
     await navigator.clipboard.writeText(voteUrl)
     setCopied(true)
@@ -190,92 +191,86 @@ export function PollDetailPage() {
           )}
         </div>
 
-        {poll.isPublished ? (
+        {poll.isPublished && (
+          <div className="mb-6 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-200">
+            <p className="text-sm font-medium">
+              {isRunning ? 'This poll is running and locked from editing.' : 'This poll is published. You can still edit it because voting has ended.'}
+            </p>
+            <p className="mt-1 text-xs text-emerald-200/80">
+              {isRunning ? 'Unpublish it first to make changes.' : 'Publish it again when you are ready to reopen voting.'}
+            </p>
+          </div>
+        )}
+
+        <form onSubmit={handleSave} className="grid gap-6 lg:grid-cols-2">
+          {/* LEFT – Details */}
           <Card className="border-white/10 bg-card/90 shadow-2xl shadow-black/35">
-            <CardHeader className="border-b border-white/10"><CardTitle className="text-xl text-zinc-50">Poll Summary (Published)</CardTitle></CardHeader>
+            <CardHeader className="border-b border-white/10"><CardTitle className="text-xl text-zinc-50">Poll Details</CardTitle></CardHeader>
             <CardContent className="grid gap-4 p-6">
-              <p className="text-sm text-zinc-400">This poll is live and cannot be edited.</p>
-              <div className="grid gap-3">
-                {[...poll.questions].sort((a, b) => a.order - b.order).map(q => (
-                  <div key={q.id} className="rounded-lg border border-white/10 bg-white/3 p-4">
-                    <p className="text-sm font-medium text-zinc-100">{q.question} {q.required && <span className="text-red-400">*</span>}</p>
-                    <div className="mt-2 flex flex-wrap gap-1.5">{q.options.map(o => <span key={o.id} className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs text-zinc-400">{o.text}</span>)}</div>
-                  </div>
-                ))}
+              <div className="grid gap-1.5">
+                <label className="text-sm font-medium text-zinc-200">Title</label>
+                <input className={inputCls} value={title} onChange={e => setTitle(e.target.value)} required disabled={isRunning} />
+              </div>
+              <div className="grid gap-1.5">
+                <label className="text-sm font-medium text-zinc-200">Description</label>
+                <textarea className="min-h-24 rounded-md border border-white/10 bg-white/3 px-3 py-2 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40" value={description} onChange={e => setDescription(e.target.value)} disabled={isRunning} />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                  <label className="text-sm font-medium text-zinc-200">Response Mode</label>
+                  <select className={inputCls} value={responseMode} onChange={e => setResponseMode(e.target.value as PollResponseMode)} disabled={isRunning}>
+                    <option className="bg-zinc-900" value="AUTHENTICATED">Authenticated</option>
+                    <option className="bg-zinc-900" value="ANONYMOUS">Anonymous</option>
+                  </select>
+                </div>
+                <div className="grid gap-1.5">
+                  <label className="text-sm font-medium text-zinc-200">Expires At</label>
+                  <DateTimePicker24h value={expiresAt} onChange={setExpiresAt} disabled={isRunning} />
+                </div>
               </div>
             </CardContent>
           </Card>
-        ) : (
-          <form onSubmit={handleSave} className="grid gap-6 lg:grid-cols-2">
-            {/* LEFT – Details */}
-            <Card className="border-white/10 bg-card/90 shadow-2xl shadow-black/35">
-              <CardHeader className="border-b border-white/10"><CardTitle className="text-xl text-zinc-50">Poll Details</CardTitle></CardHeader>
-              <CardContent className="grid gap-4 p-6">
-                <div className="grid gap-1.5">
-                  <label className="text-sm font-medium text-zinc-200">Title</label>
-                  <input className={inputCls} value={title} onChange={e => setTitle(e.target.value)} required />
-                </div>
-                <div className="grid gap-1.5">
-                  <label className="text-sm font-medium text-zinc-200">Description</label>
-                  <textarea className="min-h-24 rounded-md border border-white/10 bg-white/3 px-3 py-2 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40" value={description} onChange={e => setDescription(e.target.value)} />
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="grid gap-1.5">
-                    <label className="text-sm font-medium text-zinc-200">Response Mode</label>
-                    <select className={inputCls} value={responseMode} onChange={e => setResponseMode(e.target.value as PollResponseMode)}>
-                      <option className="bg-zinc-900" value="AUTHENTICATED">Authenticated</option>
-                      <option className="bg-zinc-900" value="ANONYMOUS">Anonymous</option>
-                    </select>
-                  </div>
-                  <div className="grid gap-1.5">
-                    <label className="text-sm font-medium text-zinc-200">Expires At</label>
-                    <DateTimePicker24h value={expiresAt} onChange={setExpiresAt} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* RIGHT – Questions */}
-            <Card className="border-white/10 bg-card/90 shadow-2xl shadow-black/35">
-              <CardHeader className="flex flex-row items-center justify-between border-b border-white/10">
-                <CardTitle className="text-xl text-zinc-50">Questions</CardTitle>
-                <Button type="button" size="sm" className="bg-zinc-100 text-zinc-950 hover:bg-zinc-200" onClick={addNewQuestion}><PlusCircle className="h-4 w-4" /> Add</Button>
-              </CardHeader>
-              <CardContent className="p-4">
-                {questions.length === 0 ? (
-                  <div className="py-10 text-center"><p className="text-sm text-zinc-500">No questions.</p></div>
-                ) : (
-                  <div className="grid gap-2">
-                    {questions.map((q, idx) => (
-                      <div key={q.localId} draggable onDragStart={onDragStart(idx)} onDragOver={onDragOver} onDrop={onDrop(idx)}
-                        className={`group flex items-start gap-2 rounded-lg border border-white/10 bg-white/3 p-3 transition-all hover:border-white/20 ${dragIdx === idx ? 'opacity-50' : ''}`}>
-                        <GripVertical className="mt-0.5 h-4 w-4 shrink-0 cursor-grab text-zinc-600" />
-                        <div className="min-w-0 flex-1 cursor-pointer" onClick={() => openEditor(q)}>
-                          <p className="truncate text-sm font-medium text-zinc-100">{q.question || <span className="italic text-zinc-500">Untitled</span>}</p>
-                          <div className="mt-1 flex flex-wrap gap-1">{q.options.filter(o => o.text.trim()).map(o => <span key={o.localId} className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] text-zinc-400">{o.text}</span>)}</div>
-                        </div>
-                        <Button type="button" size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-zinc-500 opacity-0 hover:text-red-400 group-hover:opacity-100" onClick={() => deleteQuestion(q.localId)}><Trash2 className="h-3.5 w-3.5" /></Button>
+          {/* RIGHT – Questions */}
+          <Card className="border-white/10 bg-card/90 shadow-2xl shadow-black/35">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-white/10">
+              <CardTitle className="text-xl text-zinc-50">Questions</CardTitle>
+              <Button type="button" size="sm" className="bg-zinc-100 text-zinc-950 hover:bg-zinc-200" onClick={addNewQuestion} disabled={isRunning}><PlusCircle className="h-4 w-4" /> Add</Button>
+            </CardHeader>
+            <CardContent className="p-4">
+              {questions.length === 0 ? (
+                <div className="py-10 text-center"><p className="text-sm text-zinc-500">No questions.</p></div>
+              ) : (
+                <div className="grid gap-2">
+                  {questions.map((q, idx) => (
+                    <div key={q.localId} draggable={!isRunning} onDragStart={onDragStart(idx)} onDragOver={onDragOver} onDrop={onDrop(idx)}
+                      className={`group flex items-start gap-2 rounded-lg border border-white/10 bg-white/3 p-3 transition-all hover:border-white/20 ${dragIdx === idx ? 'opacity-50' : ''}`}>
+                      <GripVertical className="mt-0.5 h-4 w-4 shrink-0 cursor-grab text-zinc-600" />
+                      <div className="min-w-0 flex-1 cursor-pointer" onClick={() => { if (!isRunning) openEditor(q) }}>
+                        <p className="truncate text-sm font-medium text-zinc-100">{q.question || <span className="italic text-zinc-500">Untitled</span>}</p>
+                        <div className="mt-1 flex flex-wrap gap-1">{q.options.filter(o => o.text.trim()).map(o => <span key={o.localId} className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] text-zinc-400">{o.text}</span>)}</div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      <Button type="button" size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-zinc-500 opacity-0 hover:text-red-400 group-hover:opacity-100" onClick={() => deleteQuestion(q.localId)} disabled={isRunning}><Trash2 className="h-3.5 w-3.5" /></Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-            <div className="flex flex-wrap gap-3 lg:col-span-2">
-              <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-zinc-200" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</> : <><Check className="h-4 w-4" /> Save Changes</>}
-              </Button>
-              <Button type="button" className="bg-emerald-600 text-white hover:bg-emerald-500" disabled={publishMutation.isPending} onClick={handlePublish}>
-                {publishMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Publishing...</> : <><Send className="h-4 w-4" /> Publish Poll</>}
-              </Button>
-              <div className="flex-1" />
-              <Button type="button" variant="ghost" className="text-red-400 hover:text-red-300" onClick={handleDelete}>
-                <Trash2 className="h-4 w-4" /> Delete
-              </Button>
-            </div>
-          </form>
-        )}
+          <div className="flex flex-wrap gap-3 lg:col-span-2">
+            <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-zinc-200" disabled={updateMutation.isPending || isRunning}>
+              {updateMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</> : <><Check className="h-4 w-4" /> Save Changes</>}
+            </Button>
+            <Button type="button" className={poll.isPublished ? 'bg-amber-600 text-white hover:bg-amber-500' : 'bg-emerald-600 text-white hover:bg-emerald-500'} disabled={publishMutation.isPending} onClick={handlePublish}>
+              {publishMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Updating...</> : <><Send className="h-4 w-4" /> {poll.isPublished ? 'Unpublish Poll' : 'Publish Poll'}</>}
+            </Button>
+            <div className="flex-1" />
+            <Button type="button" variant="ghost" className="text-red-400 hover:text-red-300" onClick={handleDelete}>
+              <Trash2 className="h-4 w-4" /> Delete
+            </Button>
+          </div>
+        </form>
       </div>
 
       {/* Question Editor Modal */}

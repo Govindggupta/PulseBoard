@@ -16,9 +16,10 @@ type DateTimePicker24hProps = {
   value?: Date
   onChange?: (date: Date | undefined) => void
   placeholder?: string
+  disabled?: boolean
 }
 
-export function DateTimePicker24h({ value, onChange, placeholder }: DateTimePicker24hProps) {
+export function DateTimePicker24h({ value, onChange, placeholder, disabled }: DateTimePicker24hProps) {
   const [date, setDateInternal] = React.useState<Date | undefined>(value);
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -60,6 +61,7 @@ export function DateTimePicker24h({ value, onChange, placeholder }: DateTimePick
         <Button
           type="button"
           variant="outline"
+          disabled={disabled}
           className={cn(
             "w-full justify-start text-left font-normal",
             !date && "text-muted-foreground"
