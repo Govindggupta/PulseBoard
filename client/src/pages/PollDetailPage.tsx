@@ -1,7 +1,7 @@
 import { type FormEvent, useState, useEffect, type DragEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  ArrowLeft, Check, Copy, ExternalLink, GripVertical,
+  ArrowLeft, BarChart3, Check, Copy, ExternalLink, GripVertical,
   Link2, Loader2, PlusCircle, Send, Trash2, X,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -63,6 +63,8 @@ export function PollDetailPage() {
   )
 
   const voteUrl = `${window.location.origin}/vote/${poll.id}`
+  const analyticsUrl = `/poll/${poll.id}/analytics`
+  const resultsUrl = `/poll/${poll.id}/results`
   const copyLink = async () => {
     await navigator.clipboard.writeText(voteUrl)
     setCopied(true)
@@ -158,13 +160,13 @@ export function PollDetailPage() {
 
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         {/* Share Link */}
-        <div className="mb-6 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="mb-6 rounded-xl border border-white/10 bg-white/3 p-4">
           <div className="flex items-center gap-2 text-sm text-zinc-400">
             <Link2 className="h-4 w-4 shrink-0" />
             <span className="font-medium text-zinc-300">Vote Link {!poll.isPublished && <span className="text-amber-400">(publish first to enable voting)</span>}</span>
           </div>
           <div className="mt-2 flex gap-2">
-            <div className="flex min-w-0 flex-1 items-center rounded-md border border-white/10 bg-white/[0.03] px-3 py-2">
+            <div className="flex min-w-0 flex-1 items-center rounded-md border border-white/10 bg-white/3 px-3 py-2">
               <code className="truncate text-sm text-zinc-300">{voteUrl}</code>
             </div>
             <Button type="button" variant="outline" className="shrink-0 border-white/10 text-zinc-300" onClick={copyLink}>
@@ -176,6 +178,16 @@ export function PollDetailPage() {
               </Button>
             )}
           </div>
+          {poll.isPublished && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button type="button" size="sm" className="bg-zinc-100 text-zinc-950 hover:bg-zinc-200" onClick={() => navigate(analyticsUrl)}>
+                <BarChart3 className="h-4 w-4" /> Analytics
+              </Button>
+              <Button type="button" size="sm" variant="ghost" className="text-zinc-300 hover:bg-white/5 hover:text-zinc-50" onClick={() => navigate(resultsUrl)}>
+                Results
+              </Button>
+            </div>
+          )}
         </div>
 
         {poll.isPublished ? (
@@ -185,7 +197,7 @@ export function PollDetailPage() {
               <p className="text-sm text-zinc-400">This poll is live and cannot be edited.</p>
               <div className="grid gap-3">
                 {[...poll.questions].sort((a, b) => a.order - b.order).map(q => (
-                  <div key={q.id} className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+                  <div key={q.id} className="rounded-lg border border-white/10 bg-white/3 p-4">
                     <p className="text-sm font-medium text-zinc-100">{q.question} {q.required && <span className="text-red-400">*</span>}</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">{q.options.map(o => <span key={o.id} className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs text-zinc-400">{o.text}</span>)}</div>
                   </div>
@@ -205,7 +217,7 @@ export function PollDetailPage() {
                 </div>
                 <div className="grid gap-1.5">
                   <label className="text-sm font-medium text-zinc-200">Description</label>
-                  <textarea className="min-h-24 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40" value={description} onChange={e => setDescription(e.target.value)} />
+                  <textarea className="min-h-24 rounded-md border border-white/10 bg-white/3 px-3 py-2 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40" value={description} onChange={e => setDescription(e.target.value)} />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="grid gap-1.5">
@@ -236,7 +248,7 @@ export function PollDetailPage() {
                   <div className="grid gap-2">
                     {questions.map((q, idx) => (
                       <div key={q.localId} draggable onDragStart={onDragStart(idx)} onDragOver={onDragOver} onDrop={onDrop(idx)}
-                        className={`group flex items-start gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-3 transition-all hover:border-white/20 ${dragIdx === idx ? 'opacity-50' : ''}`}>
+                        className={`group flex items-start gap-2 rounded-lg border border-white/10 bg-white/3 p-3 transition-all hover:border-white/20 ${dragIdx === idx ? 'opacity-50' : ''}`}>
                         <GripVertical className="mt-0.5 h-4 w-4 shrink-0 cursor-grab text-zinc-600" />
                         <div className="min-w-0 flex-1 cursor-pointer" onClick={() => openEditor(q)}>
                           <p className="truncate text-sm font-medium text-zinc-100">{q.question || <span className="italic text-zinc-500">Untitled</span>}</p>
@@ -287,7 +299,7 @@ export function PollDetailPage() {
                 <label className="text-sm font-medium text-zinc-200">Options</label>
                 {editingQ.options.map((opt, i) => (
                   <div key={opt.localId} className="flex gap-2">
-                    <input className="h-10 flex-1 rounded-md border border-white/10 bg-white/[0.03] px-3 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40" placeholder={`Option ${i + 1}`} value={opt.text}
+                    <input className="h-10 flex-1 rounded-md border border-white/10 bg-white/3 px-3 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40" placeholder={`Option ${i + 1}`} value={opt.text}
                       onChange={e => { const o = [...editingQ.options]; o[i] = { ...o[i], text: e.target.value }; setEditingQ({ ...editingQ, options: o }) }} />
                     {editingQ.options.length > 2 && (
                       <Button type="button" size="icon" variant="ghost" className="h-10 w-10 text-zinc-500 hover:text-red-400" onClick={() => setEditingQ({ ...editingQ, options: editingQ.options.filter((_, j) => j !== i) })}><Trash2 className="h-3.5 w-3.5" /></Button>

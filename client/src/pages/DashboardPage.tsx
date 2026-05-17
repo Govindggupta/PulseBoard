@@ -209,17 +209,17 @@ export function DashboardPage() {
   const dashboardView = (
     <>
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+        <div className="rounded-xl border border-white/10 bg-white/3 p-5">
           <p className="text-xs uppercase tracking-wide text-zinc-500">Total Polls</p>
           <p className="mt-2 text-3xl font-bold text-zinc-50">{myPolls?.length ?? 0}</p>
         </div>
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+        <div className="rounded-xl border border-white/10 bg-white/3 p-5">
           <p className="text-xs uppercase tracking-wide text-zinc-500">Published</p>
           <p className="mt-2 text-3xl font-bold text-emerald-400">
             {myPolls?.filter((p) => p.isPublished).length ?? 0}
           </p>
         </div>
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
+        <div className="rounded-xl border border-white/10 bg-white/3 p-5">
           <p className="text-xs uppercase tracking-wide text-zinc-500">Drafts</p>
           <p className="mt-2 text-3xl font-bold text-amber-400">
             {myPolls?.filter((p) => !p.isPublished).length ?? 0}
@@ -236,7 +236,7 @@ export function DashboardPage() {
           <p className="text-sm text-red-400">Failed to load polls</p>
         </div>
       ) : !myPolls?.length ? (
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-10 text-center">
+        <div className="rounded-xl border border-white/10 bg-white/3 p-10 text-center">
           <PlusCircle className="mx-auto h-10 w-10 text-zinc-600" />
           <p className="mt-3 text-sm text-zinc-400">No polls yet. Create your first poll to get started.</p>
           <Button
@@ -251,8 +251,8 @@ export function DashboardPage() {
           {myPolls.map((poll) => (
             <div
               key={poll.id}
-              onClick={() => navigate(`/poll/${poll.id}`)}
-              className="group cursor-pointer rounded-xl border border-white/10 bg-white/[0.03] p-5 transition-all hover:border-white/20 hover:bg-white/[0.06] hover:shadow-lg hover:shadow-black/20"
+              onClick={() => navigate(`/poll/${poll.id}/edit`)}
+              className="group cursor-pointer rounded-xl border border-white/10 bg-white/3 p-5 transition-all hover:border-white/20 hover:bg-white/6 hover:shadow-lg hover:shadow-black/20"
             >
               <div className="flex items-start justify-between gap-2">
                 <p className="text-base font-semibold text-zinc-50 line-clamp-1">{poll.title}</p>
@@ -283,6 +283,47 @@ export function DashboardPage() {
                 <span>Open</span>
                 <ChevronRight className="h-3 w-3" />
               </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="border-white/10 text-zinc-300 hover:bg-white/5"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    navigate(`/poll/${poll.id}/edit`)
+                  }}
+                >
+                  Edit
+                </Button>
+                {poll.isPublished && (
+                  <>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        navigate(`/poll/${poll.id}/analytics`)
+                      }}
+                    >
+                      Analytics
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="text-zinc-300 hover:bg-white/5 hover:text-zinc-50"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        navigate(`/poll/${poll.id}/results`)
+                      }}
+                    >
+                      Results
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -303,7 +344,7 @@ export function DashboardPage() {
           <div className="grid gap-1.5">
             <label className="text-sm font-medium text-zinc-200">Title</label>
             <input
-              className="h-11 rounded-md border border-white/10 bg-white/[0.03] px-3 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40"
+              className="h-11 rounded-md border border-white/10 bg-white/3 px-3 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40"
               placeholder="Weekly product feedback"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -315,7 +356,7 @@ export function DashboardPage() {
               Description <span className="text-zinc-500">(optional)</span>
             </label>
             <textarea
-              className="min-h-24 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40"
+              className="min-h-24 rounded-md border border-white/10 bg-white/3 px-3 py-2 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40"
               placeholder="Tell participants what this poll is about"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -325,7 +366,7 @@ export function DashboardPage() {
             <div className="grid gap-1.5">
               <label className="text-sm font-medium text-zinc-200">Response Mode</label>
               <select
-                className="h-11 rounded-md border border-white/10 bg-white/[0.03] px-3 text-zinc-50 outline-none focus:border-zinc-300/40"
+                className="h-11 rounded-md border border-white/10 bg-white/3 px-3 text-zinc-50 outline-none focus:border-zinc-300/40"
                 value={responseMode}
                 onChange={(e) => setResponseMode(e.target.value as PollResponseMode)}
               >
@@ -379,7 +420,7 @@ export function DashboardPage() {
                   onDragStart={onDragStart(idx)}
                   onDragOver={onDragOver}
                   onDrop={onDrop(idx)}
-                  className={`group flex items-start gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-3 transition-all hover:border-white/20 ${
+                  className={`group flex items-start gap-2 rounded-lg border border-white/10 bg-white/3 p-3 transition-all hover:border-white/20 ${
                     dragIdx === idx ? 'opacity-50' : ''
                   }`}
                 >
@@ -469,7 +510,7 @@ export function DashboardPage() {
           <div className="grid gap-1.5">
             <label className="text-sm font-medium text-zinc-200">Question Text</label>
             <input
-              className="h-11 rounded-md border border-white/10 bg-white/[0.03] px-3 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40"
+              className="h-11 rounded-md border border-white/10 bg-white/3 px-3 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40"
               placeholder="e.g. How satisfied are you?"
               value={editingQ.question}
               onChange={(e) => setEditingQ({ ...editingQ, question: e.target.value })}
@@ -489,7 +530,7 @@ export function DashboardPage() {
             {editingQ.options.map((opt, i) => (
               <div key={opt.localId} className="flex gap-2">
                 <input
-                  className="h-10 flex-1 rounded-md border border-white/10 bg-white/[0.03] px-3 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40"
+                  className="h-10 flex-1 rounded-md border border-white/10 bg-white/3 px-3 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40"
                   placeholder={`Option ${i + 1}`}
                   value={opt.text}
                   onChange={(e) => {

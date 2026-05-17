@@ -90,6 +90,29 @@ export type GetPollByIdResponse = {
   poll: Poll
 }
 
+export type PollAnalyticsOption = {
+  optionId: string
+  text: string
+  votes: number
+  percentage: number
+}
+
+export type PollAnalyticsQuestion = {
+  questionId: string
+  question: string
+  required: boolean
+  options: PollAnalyticsOption[]
+}
+
+export type PollAnalyticsResponse = {
+  pollId: string
+  title: string
+  isPublished: boolean
+  expiresAt: string
+  totalResponses: number
+  questions: PollAnalyticsQuestion[]
+}
+
 export const pollsApi = {
   getMyPolls: async () => {
     const response = await api.get<GetMyPollsResponse>('/api/polls')
@@ -99,6 +122,11 @@ export const pollsApi = {
   getPollById: async (pollId: string) => {
     const response = await api.get<GetPollByIdResponse>(`/api/polls/${pollId}`)
     return response.data.poll
+  },
+
+  getPollAnalytics: async (pollId: string) => {
+    const response = await api.get<PollAnalyticsResponse>(`/api/polls/${pollId}/analytics`)
+    return response.data
   },
 
   createPoll: async (payload: CreatePollRequest) => {
