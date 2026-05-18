@@ -10,7 +10,12 @@ export function usePublishPoll(pollId: string) {
     mutationFn: () => pollsApi.publishPoll(pollId),
     onSuccess: (response) => {
       toast.success(response.message, { position: 'top-center' })
-      queryClient.invalidateQueries({ queryKey: ['polls', pollId] })
+      // If server returned the updated poll, set it directly for instant UI update
+      if (response && (response as any).poll) {
+        queryClient.setQueryData(['polls', pollId], (response as any).poll)
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['polls', pollId] })
+      }
       queryClient.invalidateQueries({ queryKey: ['polls', 'mine'] })
     },
     onError: (error: unknown) => {

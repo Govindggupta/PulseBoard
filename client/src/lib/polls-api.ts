@@ -83,6 +83,7 @@ export type UpdatePollResponse = {
 export type PublishPollResponse = {
   message: string
   shareableLink: string
+  poll?: Poll
 }
 
 export type GetPollByIdResponse = {

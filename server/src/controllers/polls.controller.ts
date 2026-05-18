@@ -424,9 +424,20 @@ export const handlePublishPoll = async (req: Request, res: Response) => {
         .set({ isPublished: false })
         .where(eq(polls.id, pollId));
 
+      const updated = await db.query.polls.findFirst({
+        where: eq(polls.id, pollId),
+        with: {
+          questions: {
+            orderBy: [asc(questions.order)],
+            with: { options: { orderBy: [asc(options.order)] } },
+          },
+        },
+      });
+
       return res.status(200).json({
         message: "Poll unpublished successfully",
         shareableLink: `/poll/${pollId}`,
+        poll: updated,
       });
     }
 
@@ -450,9 +461,20 @@ export const handlePublishPoll = async (req: Request, res: Response) => {
       .set({ isPublished: true })
       .where(eq(polls.id, pollId));
 
+    const updated = await db.query.polls.findFirst({
+      where: eq(polls.id, pollId),
+      with: {
+        questions: {
+          orderBy: [asc(questions.order)],
+          with: { options: { orderBy: [asc(options.order)] } },
+        },
+      },
+    });
+
     return res.status(200).json({
       message: "Poll published successfully",
       shareableLink: `/poll/${pollId}`,
+      poll: updated,
     });
   } catch (error) {
     return res.status(500).json({
