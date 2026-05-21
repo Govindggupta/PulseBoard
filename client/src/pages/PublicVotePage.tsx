@@ -9,6 +9,32 @@ import { Button } from '../components/ui/button'
 import { pollsApi } from '../lib/polls-api'
 import { getApiErrorMessage } from '../lib/errors'
 import { useAuth } from '../context/AuthContext'
+import { useAnimatedNumber } from '../hooks'
+
+// ─── Animated result bar (mirrors PollInsightsPage OptionBar) ────────────────
+function AnimatedCount({ value }: { value: number }) {
+  return <>{useAnimatedNumber(value)}</>
+}
+
+function AnimatedOptionBar({ option }: { option: { text: string; votes: number; percentage: number } }) {
+  const barWidth = Math.max(option.percentage, option.votes > 0 ? 4 : 0)
+  return (
+    <div className="grid gap-2 rounded-lg border border-white/10 bg-white/[0.02] p-3.5">
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span className="min-w-0 flex-1 truncate text-zinc-200">{option.text}</span>
+        <span className="shrink-0 tabular-nums text-zinc-500">
+          <AnimatedCount value={option.votes} /> vote{option.votes === 1 ? '' : 's'} · {option.percentage.toFixed(2)}%
+        </span>
+      </div>
+      <div className="h-2 rounded-full bg-white/5">
+        <div
+          className="h-2 rounded-full bg-linear-to-r from-zinc-100 to-emerald-400"
+          style={{ width: `${barWidth}%`, transition: 'width 600ms cubic-bezier(0.4, 0, 0.2, 1)' }}
+        />
+      </div>
+    </div>
+  )
+}
 
 export function PublicVotePage() {
   const { pollId } = useParams<{ pollId: string }>()
@@ -142,20 +168,7 @@ export function PublicVotePage() {
                 </div>
                 <div className="mt-4 grid gap-2">
                   {question.options.map(option => (
-                    <div key={option.optionId} className="grid gap-2 rounded-lg border border-white/10 bg-white/[0.02] p-3.5">
-                      <div className="flex items-center justify-between gap-3 text-sm">
-                        <span className="min-w-0 flex-1 truncate text-zinc-200">{option.text}</span>
-                        <span className="shrink-0 text-zinc-500">
-                          {option.votes} vote{option.votes === 1 ? '' : 's'} · {option.percentage.toFixed(2)}%
-                        </span>
-                      </div>
-                      <div className="h-2 rounded-full bg-white/5">
-                        <div
-                          className="h-2 rounded-full bg-linear-to-r from-zinc-100 to-emerald-400"
-                          style={{ width: `${Math.max(option.percentage, option.votes > 0 ? 4 : 0)}%` }}
-                        />
-                      </div>
-                    </div>
+                    <AnimatedOptionBar key={option.optionId} option={option} />
                   ))}
                 </div>
               </div>
@@ -194,12 +207,32 @@ export function PublicVotePage() {
 
   if (submitted) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background text-foreground">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-4 text-center text-foreground">
         <div className="rounded-full bg-emerald-500/10 p-4">
           <CheckCircle2 className="h-16 w-16 text-emerald-400" />
         </div>
-        <p className="text-2xl font-bold text-zinc-50">Thank you!</p>
-        <p className="text-sm text-zinc-400">Your response has been recorded.</p>
+        <div>
+          <p className="text-2xl font-bold text-zinc-50">Thank you!</p>
+          <p className="mt-2 text-sm text-zinc-400">Your response has been recorded.</p>
+        </div>
+        <div className="flex gap-3">
+          <Button
+            variant="ghost"
+            className="border border-white/10 text-zinc-300 hover:bg-white/5"
+            onClick={() => window.location.href = '/'}
+          >
+            <PulseBoardLogo className="h-4 w-4" /> Home
+          </Button>
+          {poll?.isExpired && (
+            <Button
+              className="bg-zinc-100 text-zinc-950 hover:bg-zinc-200"
+              onClick={() => window.location.href = window.location.href}
+            >
+              <BarChart3 className="h-4 w-4" /> View Results
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-zinc-600">Powered by PulseBoard</p>
       </div>
     )
   }
