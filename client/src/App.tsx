@@ -6,6 +6,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { PollDetailPage } from './pages/PollDetailPage'
 import { PollAnalyticsPage, PollResultsPage } from './pages/PollInsightsPage'
 import { PublicVotePage } from './pages/PublicVotePage'
+import { NotFoundPage } from './pages/NotFoundPage'
 import { useAuth } from './context/AuthContext'
 import { HomePage } from './pages/HomePage'
 
@@ -15,31 +16,19 @@ type GuardProps = {
 
 function RequireAuth({ children }: GuardProps) {
   const { isAuthenticated } = useAuth()
-
-  if (!isAuthenticated) {
-    return <Navigate to="/signin" replace />
-  }
-
+  if (!isAuthenticated) return <Navigate to="/signin" replace />
   return children
 }
 
 function RedirectIfAuth({ children }: GuardProps) {
   const { isAuthenticated } = useAuth()
-
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />
-  }
-
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />
   return children
 }
 
 function PollEditRedirect() {
   const { pollId } = useParams<{ pollId: string }>()
-
-  if (!pollId) {
-    return <Navigate to="/dashboard" replace />
-  }
-
+  if (!pollId) return <Navigate to="/dashboard" replace />
   return <Navigate to={`/poll/${pollId}/edit`} replace />
 }
 
@@ -48,59 +37,16 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route
-          path="/signin"
-          element={
-            <RedirectIfAuth>
-              <SignInPage />
-            </RedirectIfAuth>
-          }
-        />
-        <Route
-          path="/signup"
-          element={
-            <RedirectIfAuth>
-              <SignUpPage />
-            </RedirectIfAuth>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <RequireAuth>
-              <DashboardPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/poll/:pollId"
-          element={<PollEditRedirect />}
-        />
-        <Route
-          path="/poll/:pollId/edit"
-          element={
-            <RequireAuth>
-              <PollDetailPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/poll/:pollId/analytics"
-          element={
-            <RequireAuth>
-              <PollAnalyticsPage />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/poll/:pollId/results"
-          element={
-            <RequireAuth>
-              <PollResultsPage />
-            </RequireAuth>
-          }
-        />
+        <Route path="/signin" element={<RedirectIfAuth><SignInPage /></RedirectIfAuth>} />
+        <Route path="/signup" element={<RedirectIfAuth><SignUpPage /></RedirectIfAuth>} />
+        <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
+        <Route path="/poll/:pollId" element={<PollEditRedirect />} />
+        <Route path="/poll/:pollId/edit" element={<RequireAuth><PollDetailPage /></RequireAuth>} />
+        <Route path="/poll/:pollId/analytics" element={<RequireAuth><PollAnalyticsPage /></RequireAuth>} />
+        <Route path="/poll/:pollId/results" element={<RequireAuth><PollResultsPage /></RequireAuth>} />
         <Route path="/vote/:pollId" element={<PublicVotePage />} />
+        {/* Catch-all 404 */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   )
