@@ -11,7 +11,7 @@ import { DateTimePicker24h } from '../components/ui/datetimePicker'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { useAuth } from '../context/AuthContext'
-import { useCreatePoll, useMyPolls } from '../hooks'
+import { useAnimatedNumber, useCreatePoll, useMyPolls } from '../hooks'
 import type { PollResponseMode } from '../lib/polls-api'
 
 /* ── Local question types for the builder ── */
@@ -34,6 +34,41 @@ const emptyQuestion = (): LocalQuestion => ({
     { localId: uid(), text: '' },
   ],
 })
+
+/* ── Animated stat card ── */
+function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+  const display = useAnimatedNumber(value)
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/3 p-5">
+      <p className="text-xs uppercase tracking-wide text-zinc-500">{label}</p>
+      <p className={`mt-2 text-3xl font-bold tabular-nums ${color}`}>{display}</p>
+    </div>
+  )
+}
+
+/* ── Poll status badge ── */
+function PollStatusBadge({ poll }: { poll: { isPublished: boolean; expiresAt: string } }) {
+  if (!poll.isPublished) {
+    return (
+      <span className="shrink-0 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-medium text-amber-300">
+        Draft
+      </span>
+    )
+  }
+  const isExpired = new Date() > new Date(poll.expiresAt)
+  if (isExpired) {
+    return (
+      <span className="shrink-0 rounded-full border border-zinc-500/40 bg-zinc-500/10 px-2.5 py-0.5 text-[11px] font-medium text-zinc-400">
+        Expired
+      </span>
+    )
+  }
+  return (
+    <span className="shrink-0 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-300">
+      Active
+    </span>
+  )
+}
 
 /* ── Component ── */
 export function DashboardPage() {
@@ -209,22 +244,9 @@ export function DashboardPage() {
   const dashboardView = (
     <>
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-white/10 bg-white/3 p-5">
-          <p className="text-xs uppercase tracking-wide text-zinc-500">Total Polls</p>
-          <p className="mt-2 text-3xl font-bold text-zinc-50">{myPolls?.length ?? 0}</p>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-white/3 p-5">
-          <p className="text-xs uppercase tracking-wide text-zinc-500">Published</p>
-          <p className="mt-2 text-3xl font-bold text-emerald-400">
-            {myPolls?.filter((p) => p.isPublished).length ?? 0}
-          </p>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-white/3 p-5">
-          <p className="text-xs uppercase tracking-wide text-zinc-500">Drafts</p>
-          <p className="mt-2 text-3xl font-bold text-amber-400">
-            {myPolls?.filter((p) => !p.isPublished).length ?? 0}
-          </p>
-        </div>
+        <StatCard label="Total Polls" value={myPolls?.length ?? 0} color="text-zinc-50" />
+        <StatCard label="Published" value={myPolls?.filter((p) => p.isPublished).length ?? 0} color="text-emerald-400" />
+        <StatCard label="Drafts" value={myPolls?.filter((p) => !p.isPublished).length ?? 0} color="text-amber-400" />
       </div>
 
       {isPollsLoading ? (
@@ -256,15 +278,7 @@ export function DashboardPage() {
             >
               <div className="flex items-start justify-between gap-2">
                 <p className="text-base font-semibold text-zinc-50 line-clamp-1">{poll.title}</p>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                    poll.isPublished
-                      ? 'border border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
-                      : 'border border-amber-500/40 bg-amber-500/10 text-amber-300'
-                  }`}
-                >
-                  {poll.isPublished ? 'Published' : 'Draft'}
-                </span>
+                <PollStatusBadge poll={poll} />
               </div>
               {poll.description && (
                 <p className="mt-2 text-sm text-zinc-400 line-clamp-2">{poll.description}</p>
