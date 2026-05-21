@@ -4,6 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { CheckCircle2, Loader2, Vote, AlertTriangle, BarChart3 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { useDocumentTitle } from '../hooks'
 import { PulseBoardLogo } from '../components/brand/PulseBoardLogo'
 import { Button } from '../components/ui/button'
 import { pollsApi } from '../lib/polls-api'
@@ -64,6 +65,7 @@ export function PublicVotePage() {
     queryFn: () => pollsApi.getPublicPoll(pollId!, anonymousIdentifier),
     enabled: Boolean(pollId),
   })
+  useDocumentTitle(poll?.title)
 
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState(false)

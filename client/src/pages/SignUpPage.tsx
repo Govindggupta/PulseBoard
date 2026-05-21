@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useDocumentTitle } from '../hooks'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, Eye, EyeOff, Loader2, LockKeyhole, Mail, UserRound } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -31,6 +32,7 @@ const signupSchema = z
 type SignUpFormValues = z.infer<typeof signupSchema>
 
 export function SignUpPage() {
+  useDocumentTitle('Sign Up')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const mutation = useSignUp()

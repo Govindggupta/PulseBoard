@@ -13,6 +13,7 @@ import {
   Vote,
 } from 'lucide-react'
 
+import { useDocumentTitle } from '../hooks'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { useAnimatedNumber, usePollAnalytics, usePollSocket } from '../hooks'
@@ -128,6 +129,7 @@ function InsightHeader({
 function PollInsightsPage({ variant }: PollInsightsPageProps) {
   const { pollId } = useParams<{ pollId: string }>()
   const navigate = useNavigate()
+  useDocumentTitle(variant === 'analytics' ? 'Analytics' : 'Results')
   const { data, isLoading, error } = usePollAnalytics(pollId)
 
   // Wire real-time socket updates → patches query cache directly

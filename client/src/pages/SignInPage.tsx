@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useDocumentTitle } from '../hooks'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowRight, Eye, EyeOff, Loader2, LockKeyhole, Mail } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -20,6 +21,7 @@ const signinSchema = z.object({
 type SignInFormValues = z.infer<typeof signinSchema>
 
 export function SignInPage() {
+  useDocumentTitle('Sign In')
   const [showPassword, setShowPassword] = useState(false)
   const mutation = useSignIn()
 

@@ -1,5 +1,6 @@
 import { type FormEvent, useState, type DragEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useDocumentTitle } from '../hooks'
 import {
   CalendarClock, ChevronRight, GripVertical, LayoutDashboard,
   Loader2, LogOut, PlusCircle, Trash2, User, X,
@@ -72,6 +73,7 @@ function PollStatusBadge({ poll }: { poll: { isPublished: boolean; expiresAt: st
 
 /* ── Component ── */
 export function DashboardPage() {
+  useDocumentTitle('Dashboard')
   const { user: cachedUser, logout } = useAuth()
   const navigate = useNavigate()
   const { data: myPolls, isLoading: isPollsLoading, error: pollsError } = useMyPolls()

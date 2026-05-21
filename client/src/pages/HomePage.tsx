@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useDocumentTitle } from '../hooks'
 import { motion, AnimatePresence } from 'motion/react'
 import {
   BarChart3,
@@ -698,6 +699,7 @@ function Footer() {
 
 // Main HomePage Component
 export function HomePage() {
+  useDocumentTitle('Home')
   return (
     <div className="relative min-h-screen overflow-hidden bg-black text-zinc-50">
       <motion.div

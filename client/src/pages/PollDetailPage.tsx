@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { useDocumentTitle } from '../hooks'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { DateTimePicker24h } from '../components/ui/datetimePicker'
@@ -23,6 +24,8 @@ const uid = () => crypto.randomUUID()
 export function PollDetailPage() {
   const { pollId } = useParams<{ pollId: string }>()
   const navigate = useNavigate()
+  const [pageTitle, setPageTitle] = useState('Edit Poll')
+  useDocumentTitle(pageTitle)
   const { data: poll, isLoading, error } = usePoll(pollId)
   const updateMutation = useUpdatePoll(pollId ?? '')
   const publishMutation = usePublishPoll(pollId ?? '')
@@ -41,6 +44,7 @@ export function PollDetailPage() {
 
   useEffect(() => {
     if (poll && !initialized) {
+      setPageTitle(poll.title)
       setTitle(poll.title)
       setDescription(poll.description ?? '')
       setResponseMode(poll.responseMode)
