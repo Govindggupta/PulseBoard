@@ -4,7 +4,6 @@ import { createServer } from 'http';
 import { env } from './env.js'
 import { authRouter } from './routes/auth.route.js';
 import { pollsRouter } from './routes/polls.route.js';
-import { middleware } from './middleware/middleware.js';
 import { initializeSocket } from './socket/socket.js';
 
 const app = express(); 
