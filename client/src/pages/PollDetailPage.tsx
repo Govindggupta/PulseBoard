@@ -10,7 +10,7 @@ import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { DateTimePicker24h } from '../components/ui/datetimePicker'
 import { usePoll, useUpdatePoll, usePublishPoll, useDeletePoll } from '../hooks'
-import type { PollResponseMode } from '../lib/polls-api'
+import type { PollResponseMode, UpdatePollRequest } from '../lib/polls-api'
 
 type LocalOption = { localId: string; serverId?: string; text: string }
 type LocalQuestion = {
@@ -37,6 +37,7 @@ export function PollDetailPage() {
   const [dragIdx, setDragIdx] = useState<number | null>(null)
   const [copied, setCopied] = useState(false)
   const [initialized, setInitialized] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
     if (poll && !initialized) {
@@ -109,8 +110,10 @@ export function PollDetailPage() {
     const currIds = questions.filter(q => q.serverId).map(q => q.serverId!)
     const deletedIds = origIds.filter(id => !currIds.includes(id))
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const qPayload: any[] = []
+    type OptionPayload = NonNullable<NonNullable<UpdatePollRequest['questions']>[number]['options']>[number]
+    type QuestionPayload = NonNullable<UpdatePollRequest['questions']>[number]
+
+    const qPayload: QuestionPayload[] = []
     for (const id of deletedIds) qPayload.push({ id, delete: true })
 
     for (const [idx, q] of questions.entries()) {
@@ -119,8 +122,7 @@ export function PollDetailPage() {
         const origOptIds = origQ?.options.map(o => o.id) ?? []
         const currOptIds = q.options.filter(o => o.serverId).map(o => o.serverId!)
         const delOpts = origOptIds.filter(id => !currOptIds.includes(id))
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const opts: any[] = []
+        const opts: OptionPayload[] = []
         for (const oid of delOpts) opts.push({ id: oid, delete: true })
         for (const [oi, o] of q.options.entries()) {
           if (o.serverId) opts.push({ id: o.serverId, text: o.text.trim(), order: oi + 1 })
@@ -137,7 +139,10 @@ export function PollDetailPage() {
   }
 
   const handlePublish = async () => { await publishMutation.mutateAsync(); setInitialized(false) }
-  const handleDelete = async () => { await deleteMutation.mutateAsync(poll.id); navigate('/dashboard') }
+  const handleDelete = async () => {
+    await deleteMutation.mutateAsync(poll.id)
+    navigate('/dashboard')
+  }
 
   const inputCls = "h-11 rounded-md border border-white/10 bg-white/[0.03] px-3 text-zinc-50 outline-none placeholder:text-zinc-500 focus:border-zinc-300/40"
 
@@ -151,7 +156,7 @@ export function PollDetailPage() {
           </Button>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-zinc-100">{poll.title}</p>
-            <p className="text-xs text-zinc-500">ID: {poll.id}</p>
+            <p className="text-xs text-zinc-500">Created {new Date(poll.createdAt).toLocaleDateString()}</p>
           </div>
           <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${poll.isPublished ? 'border border-emerald-500/40 bg-emerald-500/10 text-emerald-300' : 'border border-amber-500/40 bg-amber-500/10 text-amber-300'}`}>
             {poll.isPublished ? 'Published' : 'Draft'}
@@ -266,14 +271,50 @@ export function PollDetailPage() {
               {publishMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Updating...</> : <><Send className="h-4 w-4" /> {poll.isPublished ? 'Unpublish Poll' : 'Publish Poll'}</>}
             </Button>
             <div className="flex-1" />
-            <Button type="button" variant="ghost" className="text-red-400 hover:text-red-300" onClick={handleDelete}>
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-red-400 hover:text-red-300"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
               <Trash2 className="h-4 w-4" /> Delete
             </Button>
           </div>
         </form>
       </div>
 
-      {/* Question Editor Modal */}
+      {/* ── Delete Confirmation Modal ── */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowDeleteConfirm(false)} />
+          <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-zinc-900 shadow-2xl shadow-black/50">
+            <div className="p-6">
+              <div className="mb-1 flex h-10 w-10 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10">
+                <Trash2 className="h-5 w-5 text-red-400" />
+              </div>
+              <h3 className="mt-4 text-lg font-semibold text-zinc-50">Delete this poll?</h3>
+              <p className="mt-2 text-sm text-zinc-400">
+                This will permanently delete <span className="font-medium text-zinc-200">&ldquo;{poll.title}&rdquo;</span> and all its responses. This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex justify-end gap-3 border-t border-white/10 px-6 py-4">
+              <Button type="button" variant="ghost" className="text-zinc-400" onClick={() => setShowDeleteConfirm(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="bg-red-600 text-white hover:bg-red-500"
+                disabled={deleteMutation.isPending}
+                onClick={handleDelete}
+              >
+                {deleteMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" /> Deleting...</> : <><Trash2 className="h-4 w-4" /> Yes, delete</>}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Question Editor Modal ── */}
       {editingQ && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setEditingQ(null)} />
