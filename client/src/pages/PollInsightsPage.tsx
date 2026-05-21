@@ -15,27 +15,59 @@ import {
 
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
-import { usePollAnalytics } from '../hooks'
+import { useAnimatedNumber, usePollAnalytics, usePollSocket } from '../hooks'
+import type { PollAnalyticsOption } from '../lib/polls-api'
 
 type InsightsVariant = 'analytics' | 'results'
+type PollInsightsPageProps = { variant: InsightsVariant }
 
-type PollInsightsPageProps = {
-  variant: InsightsVariant
+// ─── Animated number display ─────────────────────────────────────────────────
+
+function AnimatedCount({ value, duration = 600 }: { value: number; duration?: number }) {
+  const display = useAnimatedNumber(value, duration)
+  return <>{display}</>
 }
 
-function formatPercent(value: number) {
-  return `${value.toFixed(2)}%`
+function AnimatedPercent({ value, duration = 600 }: { value: number; duration?: number }) {
+  // Multiply by 100 to work in integer space, divide back when rendering
+  const display = useAnimatedNumber(Math.round(value * 100), duration)
+  return <>{(display / 100).toFixed(2)}%</>
 }
+
+// ─── Single animated option bar row ──────────────────────────────────────────
+
+function OptionBar({ option }: { option: PollAnalyticsOption }) {
+  const barWidth = Math.max(option.percentage, option.votes > 0 ? 4 : 0)
+
+  return (
+    <div className="grid gap-2 rounded-xl border border-white/10 bg-white/3 p-4">
+      <div className="flex items-center justify-between gap-3 text-sm">
+        <span className="min-w-0 flex-1 truncate text-zinc-100">{option.text}</span>
+        <span className="shrink-0 tabular-nums text-zinc-400">
+          <AnimatedCount value={option.votes} /> vote{option.votes === 1 ? '' : 's'}
+          {' · '}
+          <AnimatedPercent value={option.percentage} />
+        </span>
+      </div>
+      {/* Bar track */}
+      <div className="h-2 rounded-full bg-white/5">
+        <div
+          className="h-2 rounded-full bg-linear-to-r from-zinc-100 to-emerald-400"
+          style={{
+            width: `${barWidth}%`,
+            transition: 'width 600ms cubic-bezier(0.4, 0, 0.2, 1)',
+            willChange: 'width',
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
+// ─── Header ──────────────────────────────────────────────────────────────────
 
 function InsightHeader({
-  variant,
-  title,
-  isExpired,
-  expiresAt,
-  totalResponses,
-  onBack,
-  onEdit,
-  onOpenVote,
+  variant, title, isExpired, expiresAt, totalResponses, onBack, onEdit, onOpenVote,
 }: {
   variant: InsightsVariant
   title: string
@@ -51,18 +83,21 @@ function InsightHeader({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-3xl">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300">
-            {variant === 'results' || isExpired ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> : <BarChart3 className="h-3.5 w-3.5 text-sky-400" />}
+            {variant === 'results' || isExpired
+              ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+              : <BarChart3 className="h-3.5 w-3.5 text-sky-400" />}
             {variant === 'results' || isExpired ? 'Final results' : 'Live analytics'}
           </div>
           <h1 className="text-3xl font-semibold tracking-tight text-zinc-50 sm:text-4xl">{title}</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
             {variant === 'results' || isExpired
               ? 'The poll has closed. These are the final numbers recorded before the deadline.'
-              : 'Monitor how responses are trending while the poll is active and close to the deadline.'}
+              : 'Monitor how responses are trending in real-time as votes come in.'}
           </p>
           <div className="mt-4 flex flex-wrap gap-3 text-xs text-zinc-500">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-              <Vote className="h-3.5 w-3.5" /> {totalResponses} response{totalResponses === 1 ? '' : 's'}
+              <Vote className="h-3.5 w-3.5" />
+              <AnimatedCount value={totalResponses} /> response{totalResponses === 1 ? '' : 's'}
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
               <Clock3 className="h-3.5 w-3.5" /> Ends {new Date(expiresAt).toLocaleString()}
@@ -72,7 +107,6 @@ function InsightHeader({
             </span>
           </div>
         </div>
-
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="ghost" className="border border-white/10 text-zinc-300 hover:bg-white/5 hover:text-zinc-50" onClick={onBack}>
             <ArrowLeft className="h-4 w-4" /> Back
@@ -89,10 +123,15 @@ function InsightHeader({
   )
 }
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 function PollInsightsPage({ variant }: PollInsightsPageProps) {
   const { pollId } = useParams<{ pollId: string }>()
   const navigate = useNavigate()
   const { data, isLoading, error } = usePollAnalytics(pollId)
+
+  // Wire real-time socket updates → patches query cache directly
+  usePollSocket(variant === 'analytics' ? pollId : undefined)
 
   const isExpired = useMemo(() => {
     if (!data?.expiresAt) return false
@@ -122,12 +161,10 @@ function PollInsightsPage({ variant }: PollInsightsPageProps) {
   }
 
   const totalQuestions = data.questions.length
-  const topQuestion = data.questions.reduce<{ question: string; votes: number } | null>((currentBest, question) => {
-    const questionVotes = question.options.reduce((sum, option) => sum + option.votes, 0)
-    if (!currentBest || questionVotes > currentBest.votes) {
-      return { question: question.question, votes: questionVotes }
-    }
-    return currentBest
+  const topQuestion = data.questions.reduce<{ question: string; votes: number } | null>((best, q) => {
+    const qVotes = q.options.reduce((s, o) => s + o.votes, 0)
+    if (!best || qVotes > best.votes) return { question: q.question, votes: qVotes }
+    return best
   }, null)
 
   return (
@@ -144,13 +181,16 @@ function PollInsightsPage({ variant }: PollInsightsPageProps) {
           onOpenVote={() => window.open(voteUrl, '_blank', 'noopener,noreferrer')}
         />
 
+        {/* Stat cards */}
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           <Card className="border-white/10 bg-card/90 shadow-2xl shadow-black/25">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-zinc-400">Total responses</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-semibold text-zinc-50">{data.totalResponses}</p>
+              <p className="text-3xl font-semibold tabular-nums text-zinc-50">
+                <AnimatedCount value={data.totalResponses} />
+              </p>
               <p className="mt-2 text-xs text-zinc-500">Across all submitted ballots</p>
             </CardContent>
           </Card>
@@ -159,7 +199,7 @@ function PollInsightsPage({ variant }: PollInsightsPageProps) {
               <CardTitle className="text-sm font-medium text-zinc-400">Questions</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-semibold text-zinc-50">{totalQuestions}</p>
+              <p className="text-3xl font-semibold tabular-nums text-zinc-50">{totalQuestions}</p>
               <p className="mt-2 text-xs text-zinc-500">Tracked in the poll</p>
             </CardContent>
           </Card>
@@ -170,27 +210,29 @@ function PollInsightsPage({ variant }: PollInsightsPageProps) {
             <CardContent>
               <p className="line-clamp-2 text-sm font-medium text-zinc-50">{topQuestion?.question ?? 'No votes yet'}</p>
               <p className="mt-2 text-xs text-zinc-500">
-                {topQuestion ? `${topQuestion.votes} vote${topQuestion.votes === 1 ? '' : 's'} total` : 'Responses will appear here once voting starts'}
+                {topQuestion
+                  ? <><AnimatedCount value={topQuestion.votes} /> vote{topQuestion.votes === 1 ? '' : 's'} total</>
+                  : 'Responses will appear here once voting starts'}
               </p>
             </CardContent>
           </Card>
         </div>
 
+        {/* Question breakdown */}
         {data.totalResponses === 0 ? (
           <Card className="mt-6 border-white/10 bg-card/90 shadow-2xl shadow-black/25">
             <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
               <Target className="h-10 w-10 text-zinc-600" />
               <p className="text-lg font-medium text-zinc-100">No responses yet</p>
               <p className="max-w-md text-sm text-zinc-500">
-                Share the vote link to start collecting responses. This board will update automatically as votes come in.
+                Share the vote link to start collecting responses. This board updates in real-time as votes come in.
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="mt-6 grid gap-4">
             {data.questions.map((question) => {
-              const questionTotal = question.options.reduce((sum, option) => sum + option.votes, 0)
-
+              const questionTotal = question.options.reduce((s, o) => s + o.votes, 0)
               return (
                 <Card key={question.questionId} className="border-white/10 bg-card/90 shadow-2xl shadow-black/25">
                   <CardHeader className="border-b border-white/10">
@@ -200,26 +242,13 @@ function PollInsightsPage({ variant }: PollInsightsPageProps) {
                         <p className="mt-1 text-xs text-zinc-500">{question.required ? 'Required' : 'Optional'}</p>
                       </div>
                       <span className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-zinc-300">
-                        {questionTotal} total vote{questionTotal === 1 ? '' : 's'}
+                        <AnimatedCount value={questionTotal} /> total vote{questionTotal === 1 ? '' : 's'}
                       </span>
                     </div>
                   </CardHeader>
                   <CardContent className="grid gap-3 p-6">
                     {question.options.map((option) => (
-                      <div key={option.optionId} className="grid gap-2 rounded-xl border border-white/10 bg-white/3 p-4">
-                        <div className="flex items-center justify-between gap-3 text-sm">
-                          <span className="min-w-0 flex-1 truncate text-zinc-100">{option.text}</span>
-                          <span className="shrink-0 text-zinc-400">
-                            {option.votes} vote{option.votes === 1 ? '' : 's'} · {formatPercent(option.percentage)}
-                          </span>
-                        </div>
-                        <div className="h-2 rounded-full bg-white/5">
-                          <div
-                            className="h-2 rounded-full bg-linear-to-r from-zinc-100 to-emerald-400"
-                            style={{ width: `${Math.max(option.percentage, option.votes > 0 ? 4 : 0)}%` }}
-                          />
-                        </div>
-                      </div>
+                      <OptionBar key={option.optionId} option={option} />
                     ))}
                   </CardContent>
                 </Card>
